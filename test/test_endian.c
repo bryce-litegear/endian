@@ -1,8 +1,9 @@
-#ifdef TEST
 
 #include "unity.h"
 
 #include "endian.h"
+#include <stdio.h>
+
 
 void setUp(void)
 {
@@ -100,6 +101,97 @@ void test_le64toh(void)
 }          
 
 
+void test_buffer_builder_le(void)
+{
+    uint8_t buffer[200];
+    uint8_t *b = buffer;
+    memcpy(b++, &(uint8_t){0x5a}, 1);
+    store16_le(b, 0x1234);
+    b += sizeof(uint16_t);
+    store32_le(b, 0x12345678);
+    b += sizeof(uint32_t);
+    store64_le(b, 0x87654321ABCDEF0ULL);
+    b = buffer;
+    TEST_ASSERT_EQUAL_HEX(0x5a, *b++);
+    TEST_ASSERT_EQUAL_HEX(0x1234, load16_le(b) );
+    b += sizeof(uint16_t);
+    TEST_ASSERT_EQUAL_HEX(0x12345678, load32_le(b) );
+    b += sizeof(uint32_t);
+    TEST_ASSERT_EQUAL_HEX64(0x87654321ABCDEF0ULL, load64_le(b) );
+}
+
+void test_buffer_builder_be(void)
+{
+    uint8_t buffer[200];
+    uint8_t *b = buffer;
+    memcpy(b++, &(uint8_t){0x5a}, 1);
+    store16_be(b, 0x1234);
+    b += sizeof(uint16_t);
+    store32_be(b, 0x12345678);
+    b += sizeof(uint32_t);
+    store64_be(b, 0x87654321ABCDEF0ULL);
+    b = buffer;
+    TEST_ASSERT_EQUAL_HEX(0x5a, *b++);
+    TEST_ASSERT_EQUAL_HEX(0x1234, load16_be(b) );
+    b += sizeof(uint16_t);
+    TEST_ASSERT_EQUAL_HEX(0x12345678, load32_be(b) );
+    b += sizeof(uint32_t);
+    TEST_ASSERT_EQUAL_HEX64(0x87654321ABCDEF0ULL, load64_be(b) );
+}
+
+void test_buffer_builder_le2(void)
+{
+    uint8_t buffer[200];
+    uint8_t *b = buffer;
+    memcpy(b++, &(uint8_t){0x5a}, 1);
+    TEST_ASSERT_EQUAL_PTR(&buffer[1], b);    
+    append16_le(b, 0x1234);
+    TEST_ASSERT_EQUAL_PTR(&buffer[1+2], b);        
+    append32_le(b, 0x12345678);
+    TEST_ASSERT_EQUAL_PTR(&buffer[1+2+4], b);        
+    append64_le(b, 0x87654321ABCDEF0ULL);
+    TEST_ASSERT_EQUAL_PTR(&buffer[1+2+4+8], b);        
+    b = buffer;
+    TEST_ASSERT_EQUAL_HEX(0x5a, *b++);
+    TEST_ASSERT_EQUAL_PTR(&buffer[1], b);
+    TEST_ASSERT_EQUAL_HEX(0x1234, extract16_le(b) );
+    TEST_ASSERT_EQUAL_PTR(&buffer[3], b);
+    TEST_ASSERT_EQUAL_HEX(0x12345678, extract32_le(b) );
+    TEST_ASSERT_EQUAL_PTR(&buffer[7], b);
+    TEST_ASSERT_EQUAL_HEX64(0x87654321ABCDEF0ULL, extract64_le(b) );
+    TEST_ASSERT_EQUAL_PTR(&buffer[1+2+4+8], b);
+    printf("le->");
+    for(int i=0; &buffer[i] < b; i++) 
+    {
+        printf("%02X", buffer[i]);
+    }
+    printf("\n");    
+}
+
+void test_buffer_builder_be2(void)
+{
+    uint8_t buffer[200];
+    uint8_t *b = buffer;
+    memcpy(b++, &(uint8_t){0x5a}, 1);
+    append16_be(b, 0x1234);
+    append32_be(b, 0x12345678);
+    append64_be(b, 0x87654321ABCDEF0ULL);
+    b = buffer;
+    TEST_ASSERT_EQUAL_HEX(0x5a, *b++);
+    TEST_ASSERT_EQUAL_PTR(&buffer[1], b);    
+    TEST_ASSERT_EQUAL_HEX(0x1234, extract16_be(b) );
+    TEST_ASSERT_EQUAL_PTR(&buffer[3], b);    
+    TEST_ASSERT_EQUAL_HEX(0x12345678, extract32_be(b) );
+    TEST_ASSERT_EQUAL_PTR(&buffer[7], b);    
+    TEST_ASSERT_EQUAL_HEX64(0x87654321ABCDEF0ULL, extract64_be(b) );
+    TEST_ASSERT_EQUAL_PTR(&buffer[1+2+4+8], b);   
+    printf("be->");    
+    for(int i=0; &buffer[i] < b; i++) 
+    {
+        printf("%02X", buffer[i]);
+    }
+    printf("\n");
+}
 
 
 
@@ -114,4 +206,7 @@ void test_le64toh(void)
 
 
 
-#endif // TEST
+
+
+
+

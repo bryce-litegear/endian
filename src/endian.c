@@ -10,7 +10,9 @@
 #include <stdlib.h>
 #include "endian.h"
 
-#ifdef HOST_IS_LE
+#ifdef HOST_IS_LE // the host is LE and the NET is BE
+
+// TCP/IP versions did not support a 64bit call
 
 uint32_t htonl(uint32_t hostlong)
 {
@@ -40,6 +42,12 @@ uint16_t ntohs(uint16_t netshort)
                      netshort << 8 }; 
 }
 
+
+
+// The endian.h version have explicit size and does support
+// 64 bit fields
+// Note that the pattern of shifts below is detected by most modern
+// compilers and extensively optimized with O1 and above.
 uint16_t htobe16(uint16_t host_16bits)
 {
   return (uint16_t){ host_16bits >> 8 | 
@@ -88,6 +96,21 @@ uint32_t le32toh(uint32_t little_endian_32bits)
   return little_endian_32bits;
 }
 
+/* The code below is typically optimized to the following assembly in the
+   ARM GCC compiler
+
+htobe64(unsigned long long):
+        mov     r2, r0
+        eor     r3, r0, r0, ror #16
+        eor     r0, r1, r1, ror #16
+        lsr     r3, r3, #8
+        lsr     r0, r0, #8
+        bic     r3, r3, #65280
+        bic     r0, r0, #65280
+        eor     r0, r0, r1, ror #8
+        eor     r1, r3, r2, ror #8
+        bx      lr
+*/
 uint64_t htobe64(uint64_t host_64bits)
 {
   return (uint64_t){ host_64bits >> 56 | 
